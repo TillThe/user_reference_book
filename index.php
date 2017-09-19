@@ -8,9 +8,12 @@ $user_data = get_user_data();
 
 echo "
 <script>
-  let user_data = ". json_encode($user_data) .";
+  let user_data = ". json_encode($user_data) .",
+    createTablesFlag = false;
 
-  localStorage.setItem('user_data', user_data);
+  if (!'1' in user_data) {
+    createTablesFlag = confirm('Таблицы в БД пусты, отсутствуют или у них неверная структура/названия. Пересоздать их?');
+  }
 </script>";
 ?>
 <!DOCTYPE html>

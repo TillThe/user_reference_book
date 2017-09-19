@@ -35,6 +35,18 @@ function get_data($table) {
   return $data;
 }
 
+function get_last_record($table) {
+  global $db;
+  $data = array();
+
+  if ($result = $db->query("SELECT * FROM {$table} WHERE id = LAST_INSERT_ID()")) {
+    $data = $result->fetch_all(MYSQLI_ASSOC);
+    $result->close();
+  }
+
+  return $data;
+}
+
 function form_options($data) {
   $str = "";
 
@@ -62,14 +74,16 @@ function get_user_data() {
 
   $sql = $db->query("SELECT u.id, u.name, e.name, c.name FROM user u, education e, city c, users_city uc WHERE u.education_id = e.id AND c.id = uc.city_id AND u.id = uc.user_id");
 
-  $data = $sql->fetch_all();
-  foreach ($data as $key => $value) {
-    if (!key_exists($value[0], $user_data)) {
-      $user_data[$value[0]] = $value;
-      $user_data[$value[0]][] = $value[3];
-    } else {
-      $user_data[$value[0]][3] .= ", " . $value[3];
-      $user_data[$value[0]][] = $value[3];
+  if ($sql) {
+    $data = $sql->fetch_all();
+    foreach ($data as $key => $value) {
+      if (!key_exists($value[0], $user_data)) {
+        $user_data[$value[0]] = $value;
+        $user_data[$value[0]][] = $value[3];
+      } else {
+        $user_data[$value[0]][3] .= ", " . $value[3];
+        $user_data[$value[0]][] = $value[3];
+      }
     }
   }
 

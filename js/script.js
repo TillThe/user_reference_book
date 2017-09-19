@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
   addHandlers();
+
+  if (createTablesFlag) {
+    createTables();
+  }
 });
 function addHandlers() {
   [].forEach.call(document.querySelectorAll('.filter-list-item'), function(item) {
@@ -40,9 +44,21 @@ function addCity() {
     } else {
       try {
         data = JSON.parse(xhr.responseText);
-        document.getElementById('cities').innerHTML = data['options'];
-        document.getElementById('city-box').innerHTML = data['li'];
+
+        /*создание и вставка элементов подобным образом нужна для того, чтобы вставлять города в начало списков, при этом не сбрасывая их и оставляя формирование элементов на серверной стороне*/
+        let optionWrapper = document.createElement('div'),
+          liWrapper = document.createElement('div');
+        optionWrapper.innerHTML = data['options'];
+        liWrapper.innerHTML = data['li'];
+
+        document.getElementById('cities').insertBefore(optionWrapper.children[0], document.querySelector('#cities option'));
+
+
+        document.getElementById('city-box').insertBefore(liWrapper.children[0], document.querySelector('#city-box li'));
+
         document.getElementById('city-new').querySelector('input').value = '';
+
+        addHandlers();
       } catch(err) {
         alert('Такой город уже есть');
       } finally {
@@ -138,4 +154,50 @@ Object.prototype.toArray = function() {
   }
 
   return arr;
+}
+function createTables() {
+  let xhr = new XMLHttpRequest();
+
+  xhr.open('POST', 'handlers/create-tables.php', true);
+  xhr.send();
+
+  xhr.onreadystatechange = function() {
+    if (this.readyState != 4) return;
+
+    if (xhr.status != 200) {
+      console.log( xhr.status + ': ' + xhr.statusText );
+    } else {
+      if (xhr.responseText == 'success') {
+        let insertFlag = confirm('Добавить города и образование?');
+        if (insertFlag) {
+          insertRecords();
+        }
+      } else {
+        alert('Что-то пошло не так. Код ошибки смотрите в консоли.');
+        console.log(xhr.responseText);
+      }
+    }
+  }
+}
+function insertRecords() {
+  let xhr = new XMLHttpRequest();
+
+  xhr.open('POST', 'handlers/insert-records.php', true);
+  xhr.send();
+
+  xhr.onreadystatechange = function() {
+    if (this.readyState != 4) return;
+
+    if (xhr.status != 200) {
+      console.log( xhr.status + ': ' + xhr.statusText );
+    } else {
+      if (xhr.responseText == 'success') {
+        alert('Записи успешно добавлены');
+        location.reload();
+      } else {
+        alert('Что-то пошло не так. Код ошибки смотрите в консоли.');
+        console.log(xhr.responseText);
+      }
+    }
+  }
 }
